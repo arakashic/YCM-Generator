@@ -33,7 +33,7 @@ def main():
     parser.add_argument("-m", "--make", default="make", help="Use the specified executable for make.")
     parser.add_argument("-c", "--compiler", help="Use the specified executable for clang. It should be the same version as the libclang used by YCM. The executable for clang++ will be inferred from this.")
     parser.add_argument("-C", "--configure_opts", default="", help="Additional flags to pass to configure/cmake/etc. e.g. --configure_opts=\"--enable-FEATURE\"")
-    parser.add_argument("-F", "--format", choices=["ycm", "cc"], default="ycm", help="Format of output file (YouCompleteMe or color_coded). Default: ycm")
+    parser.add_argument("-F", "--format", choices=["ycm", "cc", "all"], default="ycm", help="Format of output file (YouCompleteMe or color_coded or all of them). Default: ycm")
     parser.add_argument("-M", "--make-flags", help="Flags to pass to make when fake-building. Default: -M=\"{}\"".format(" ".join(default_make_flags)))
     parser.add_argument("-o", "--output", help="Save the config file as OUTPUT. Default: .ycm_extra_conf.py, or .color_coded if --format=cc.")
     parser.add_argument("-x", "--language", choices=["c", "c++"], help="Only output flags for the given language. This defaults to whichever language has its compiler invoked the most.")
@@ -71,17 +71,20 @@ def main():
 
     # prompt user to overwrite existing file (if necessary)
     config_file = {
-        None:  args["output"],
-        "cc":  os.path.join(project_dir, ".color_coded"),
-        "ycm": os.path.join(project_dir, ".ycm_extra_conf.py"),
+        None:  [args["output"],],
+        "ycm": [os.path.join(project_dir, ".ycm_extra_conf.py"),],
+        "cc":  [os.path.join(project_dir, ".color_coded"),],
+        "all": [os.path.join(project_dir, ".ycm_extra_conf.py"),
+                os.path.join(project_dir, ".color_coded"),],
     }[args["format"] if args["output"] is None else None]
 
-    if(os.path.exists(config_file)):
-        print("'{}' already exists. Overwrite? [y/N] ".format(config_file)),
-        response = sys.stdin.readline().strip().lower()
+    for file_path in config_file:
+        if(os.path.exists(file_path)):
+            print("'{}' already exists. Overwrite? [y/N] ".format(file_path)),
+            response = sys.stdin.readline().strip().lower()
 
-        if(response != "y" and response != "yes"):
-            return 1
+            if(response != "y" and response != "yes"):
+                return 1
 
     # command-line args to pass to fake_build() using kwargs
     args["make_cmd"] = args.pop("make")
@@ -96,6 +99,7 @@ def main():
     generate_conf = {
         "ycm": generate_ycm_conf,
         "cc":  generate_cc_conf,
+        "all": 0,
     }[output_format]
 
     # temporary files to hold build logs
@@ -128,8 +132,14 @@ def main():
             else:
                 lang, flags = ("c++", cxx_flags)
 
-            generate_conf(["-x", lang] + flags, config_file)
-            print("Created {} config file with {} {} flags".format(output_format.upper(), len(flags), lang.upper()))
+            if output_format == "all":
+                generate_ycm_conf(["-x", lang] + flags, config_file[0])
+                print("Created {} config file with {} {} flags".format("YCM", len(flags), lang.upper()))
+                generate_cc_conf(["-x", lang] + flags, config_file[1])
+                print("Created {} config file with {} {} flags".format("CC", len(flags), lang.upper()))
+            else:
+                generate_conf(["-x", lang] + flags, config_file[0])
+                print("Created {} config file with {} {} flags".format(output_format.upper(), len(flags), lang.upper()))
 
 
 def fake_build(project_dir, c_build_log_path, cxx_build_log_path, verbose, make_cmd, cc, cxx, out_of_tree, configure_opts, make_flags, preserve_environment, qt_version):
