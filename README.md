@@ -1,4 +1,10 @@
 # YCM-Generator
+This is a modified version of the original [YCM-Generator](https://github.com/rdnetto/YCM-Generator/). The following changes are made/planned.
+* path for out-of-tree mode
+* generate files for both ycm and cc with running the generator once.
+
+The following is the README of the original YCM-Generator.
+
 This is a script which generates a list of compiler flags from a project with an arbitrary build system. It can be used to:
 
 * generate a ```.ycm_extra_conf.py``` file for use with [YouCompleteMe](https://github.com/Valloric/YouCompleteMe)
