@@ -38,6 +38,7 @@ def main():
     parser.add_argument("-o", "--output", help="Save the config file as OUTPUT. Default: .ycm_extra_conf.py, or .color_coded if --format=cc.")
     parser.add_argument("-x", "--language", choices=["c", "c++"], help="Only output flags for the given language. This defaults to whichever language has its compiler invoked the most.")
     parser.add_argument("--out-of-tree", action="store_true", help="Build autotools projects out-of-tree. This is a no-op for other project types.")
+    parser.add_argument("--vpath", default="", help="VPATH when building autotools projects out-of-tree. This is to be used with --out-of-tree. This is a no-op for other project types.")
     parser.add_argument("--qt-version", choices=["4", "5"], default="5", help="Use the given Qt version for qmake. (Default: 5)")
     parser.add_argument("-e", "--preserve-environment", action="store_true", help="Pass environment variables to build processes.")
     parser.add_argument("PROJECT_DIR", help="The root directory of the project.")
@@ -142,7 +143,7 @@ def main():
                 print("Created {} config file with {} {} flags".format(output_format.upper(), len(flags), lang.upper()))
 
 
-def fake_build(project_dir, c_build_log_path, cxx_build_log_path, verbose, make_cmd, cc, cxx, out_of_tree, configure_opts, make_flags, preserve_environment, qt_version):
+def fake_build(project_dir, c_build_log_path, cxx_build_log_path, verbose, make_cmd, cc, cxx, out_of_tree, configure_opts, make_flags, preserve_environment, qt_version, vpath):
     '''Builds the project using the fake toolchain, to collect the compiler flags.
 
     project_dir: the directory containing the source files
@@ -241,7 +242,17 @@ def fake_build(project_dir, c_build_log_path, cxx_build_log_path, verbose, make_
         # perform build in-tree, since not all projects handle out-of-tree builds correctly
 
         if(out_of_tree):
-            build_dir = tempfile.mkdtemp()
+            # verify that vpath exists if argument is not empty
+            build_dir = ""
+            if(vpath):
+                vpath_dir = os.path.abspath(vpath)
+                if(not os.path.exists(vpath_dir)):
+                    print("ERROR: '{}' does not exist".format(vpath_dir))
+                    return 1
+                build_dir = vpath_dir
+            else:
+                build_dir = tempfile.mkdtemp()
+
             proc_opts["cwd"] = build_dir
             print("Configuring autotools in '{}'...".format(build_dir))
         else:
