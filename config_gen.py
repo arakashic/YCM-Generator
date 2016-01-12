@@ -266,8 +266,9 @@ def fake_build(project_dir, c_build_log_path, cxx_build_log_path, verbose, make_
         print("\nCleaning up...")
 
         if(out_of_tree):
-            print("")
-            shutil.rmtree(build_dir)
+            if(!vpath):
+                print("")
+                shutil.rmtree(build_dir)
         else:
             run([make_cmd, "maintainer-clean"], env=env, **proc_opts)
 
