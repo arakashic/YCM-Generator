@@ -30,6 +30,7 @@ def main():
     # parse command-line args
     parser = argparse.ArgumentParser(description="Automatically generates config files for YouCompleteMe")
     parser.add_argument("-v", "--verbose", action="store_true", help="Show output from build process")
+    parser.add_argument("-f", "--force", action="store_true", help="Overwrite the file if it exists.")
     parser.add_argument("-m", "--make", default="make", help="Use the specified executable for make.")
     parser.add_argument("-c", "--compiler", help="Use the specified executable for clang. It should be the same version as the libclang used by YCM. The executable for clang++ will be inferred from this.")
     parser.add_argument("-C", "--configure_opts", default="", help="Additional flags to pass to configure/cmake/etc. e.g. --configure_opts=\"--enable-FEATURE\"")
@@ -80,8 +81,8 @@ def main():
     }[args["format"] if args["output"] is None else None]
 
     for file_path in config_file:
-        if(os.path.exists(file_path)):
-            print("'{}' already exists. Overwrite? [y/N] ".format(file_path)),
+        if(os.path.exists(config_file) and not args["force"]):
+            print("'{}' already exists. Overwrite? [y/N] ".format(config_file)),
             response = sys.stdin.readline().strip().lower()
 
             if(response != "y" and response != "yes"):
@@ -94,6 +95,7 @@ def main():
     force_lang = args.pop("language")
     output_format = args.pop("format")
     del args["compiler"]
+    del args["force"]
     del args["output"]
     del args["PROJECT_DIR"]
 
@@ -225,13 +227,16 @@ def fake_build(project_dir, c_build_log_path, cxx_build_log_path, verbose, make_
             cache_tmp = None
 
         print("Running cmake in '{}'...".format(build_dir))
+        sys.stdout.flush()
         run(["cmake", project_dir] + configure_opts, env=env_config, **proc_opts)
 
         print("\nRunning make...")
+        sys.stdout.flush()
         run(make_args, env=env, **proc_opts)
 
         print("\nCleaning up...")
         print("")
+        sys.stdout.flush()
         shutil.rmtree(build_dir)
 
         if(cache_tmp):
@@ -345,7 +350,7 @@ def parse_flags(build_log):
     define_regex = re.compile("-D([a-zA-Z0-9_]+)=(.*)")
 
     # Used to only bundle filenames with applicable arguments
-    filename_flags = ["-o", "-I", "-isystem", "-include", "-imacros"]
+    filename_flags = ["-o", "-I", "-isystem", "-include", "-imacros", "-isysroot"]
 
     # Process build log
     for line in build_log:
