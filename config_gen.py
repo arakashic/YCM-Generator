@@ -354,7 +354,9 @@ def parse_flags(build_log):
             continue
 
         line_count += 1
-        words = split_flags(line)
+        lineparts = line.strip().split("+=>")
+        build_pwd = lineparts[1]
+        words = split_flags(lineparts[0])
 
         for (i, word) in enumerate(words):
             if(word[0] != '-' or not flags_whitelist.match(word)):
