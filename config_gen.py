@@ -81,8 +81,8 @@ def main():
     }[args["format"] if args["output"] is None else None]
 
     for file_path in config_file:
-        if(os.path.exists(config_file) and not args["force"]):
-            print("'{}' already exists. Overwrite? [y/N] ".format(config_file)),
+        if(os.path.exists(file_path) and not args["force"]):
+            print("'{}' already exists. Overwrite? [y/N] ".format(file_path)),
             response = sys.stdin.readline().strip().lower()
 
             if(response != "y" and response != "yes"):
@@ -379,7 +379,17 @@ def parse_flags(build_log):
 
             # include arguments for this option, if there are any, as a tuple
             if(i != len(words) - 1 and word in filename_flags and words[i + 1][0] != '-'):
-                flags.add((word, words[i + 1]))
+                if not os.path.isabs(word[i + 1]):
+                    full_path = os.path.abspath(os.path.join(build_pwd, word[i + 1]))
+                    flags.add((word, full_path))
+                else:
+                    flags.add((word, word[i + 1]))
+            elif(word[:2] == "-I"):
+                if not os.path.isabs(word[2:]):
+                    full_path = os.path.abspath(os.path.join(build_pwd, word[2:]))
+                    flags.add("-I"+full_path)
+                else:
+                    flags.add(word);
             else:
                 flags.add(word)
 
