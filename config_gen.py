@@ -16,7 +16,7 @@ import glob
 
 
 # Default flags for make
-default_make_flags = ["-i", "-j" + str(multiprocessing.cpu_count())]
+default_make_flags = ["-i", "-j" + "1"]
 
 # Set YCM-Generator directory
 # Always obtain the real path to the directory where 'config_gen.py' lives as,
