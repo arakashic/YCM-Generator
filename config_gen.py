@@ -170,8 +170,6 @@ def fake_build(project_dir, c_build_log_path, cxx_build_log_path, verbose, make_
     # TODO: add Windows support
     assert(not sys.platform.startswith("win32"))
     fake_path = os.path.join(ycm_generator_dir, "fake-toolchain", "Unix")
-    if sys.platform == "darwin":
-        fake_path = os.path.join(ycm_generator_dir, "fake-toolchain", "osx")
 
     # environment variables and arguments for build process
     started = time.time()
