@@ -35,7 +35,7 @@ def main():
     parser.add_argument("-b", "--build-system", choices=["cmake", "autotools", "qmake", "make"], help="Force use of the specified build system rather than trying to autodetect.")
     parser.add_argument("-c", "--compiler", help="Use the specified executable for clang. It should be the same version as the libclang used by YCM. The executable for clang++ will be inferred from this.")
     parser.add_argument("-C", "--configure_opts", default="", help="Additional flags to pass to configure/cmake/etc. e.g. --configure_opts=\"--enable-FEATURE\"")
-    parser.add_argument("-F", "--format", choices=["ycm", "cc", "all"], default="ycm", help="Format of output file (YouCompleteMe or color_coded or all of them). Default: ycm")
+    parser.add_argument("-F", "--format", choices=["ycm", "cc", "clang", "all"], default="ycm", help="Format of output file (YouCompleteMe or color_coded or all of them). Default: ycm")
     parser.add_argument("-M", "--make-flags", help="Flags to pass to make when fake-building. Default: -M=\"{}\"".format(" ".join(default_make_flags)))
     parser.add_argument("-o", "--output", help="Save the config file as OUTPUT. Default: .ycm_extra_conf.py, or .color_coded if --format=cc.")
     parser.add_argument("-x", "--language", choices=["c", "c++"], help="Only output flags for the given language. This defaults to whichever language has its compiler invoked the most.")
@@ -77,6 +77,7 @@ def main():
         None:  [args["output"],],
         "ycm": [os.path.join(project_dir, ".ycm_extra_conf.py"),],
         "cc":  [os.path.join(project_dir, ".color_coded"),],
+        "clang":  [os.path.join(project_dir, ".clang"),],
         "all": [os.path.join(project_dir, ".ycm_extra_conf.py"),
                 os.path.join(project_dir, ".color_coded"),],
     }[args["format"] if args["output"] is None else None]
@@ -103,6 +104,7 @@ def main():
     generate_conf = {
         "ycm": generate_ycm_conf,
         "cc":  generate_cc_conf,
+        "clang": generate_clang_conf,
         "all": 0,
     }[output_format]
 
@@ -495,6 +497,21 @@ def generate_ycm_conf(flags, config_file):
                 else:
                     # copy template
                     output.write(line)
+
+
+def generate_clang_conf(flags, config_file):
+    '''Generates the .clang file
+
+    flags: the list of flags
+    config_file: the path to save the configuration file at'''
+
+    with open(config_file, "w") as output:
+        for flag in flags:
+            if(isinstance(flag, basestring)):
+                output.write("flags=" + flag + "\n")
+            else: # is tuple
+                for f in flag:
+                    output.write("flags=" + f + "\n")
 
 
 def split_flags(line):
