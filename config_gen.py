@@ -200,6 +200,7 @@ def fake_build(project_dir, c_build_log_path, cxx_build_log_path, verbose, make_
     env_config = env.copy()
     env_config["YCM_CONFIG_GEN_CC_PASSTHROUGH"] = cc
     env_config["YCM_CONFIG_GEN_CXX_PASSTHROUGH"] = cxx
+    env_config["YCM_CONFIG_GEN_LD_PASSTHROUGH"] = "/usr/bin/ld"
 
     # use -i (ignore errors), since the makefile may include scripts which
     # depend upon the existence of various output files
